@@ -199,6 +199,7 @@ public class HanabiServer implements ConnectionListener {
     checkState(state.get("turn").equals(from));
 
     Json card = removeAndReplace(index, from);
+
     if (state.getInt("cluesLeft") < 8) {
       state.with("cluesLeft", state.getInt("cluesLeft") + 1);
     }
