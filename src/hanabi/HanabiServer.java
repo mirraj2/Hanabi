@@ -57,7 +57,7 @@ public class HanabiServer implements ConnectionListener {
       announce(name + " reset the server.");
       reset();
     } else if (command.equals("chat")) {
-      chat(json.get("message"));
+      announce(json.get("message"));
     }
     else {
       logger.error("Don't know command: " + json);
@@ -254,10 +254,6 @@ public class HanabiServer implements ConnectionListener {
 
   private void announce(String s) {
     sendToAll(Json.object().with("command", "announce").with("text", s));
-  }
-
-  private void chat(String msg) {
-    announce(msg);
   }
 
   private void sendUpdate() {

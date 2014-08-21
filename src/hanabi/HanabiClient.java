@@ -44,7 +44,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
 
   private static final boolean ROTATE_SELF_TO_TOP = false;
 
-  private ClientConnection conn = new ClientConnection(this, "localhost", 19883, false);
+  private ClientConnection conn = new ClientConnection(this, "home.jasonmirra.com", 19883, false);
   private String username;
   private Json state;
   private JComponent leftSide = new JPanel(new MigLayout("insets 0, gap 0"));
@@ -53,7 +53,6 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   private DiscardPanel discardPanel = new DiscardPanel();
   private boolean loggedIn = false;
   private GButton newGameButton;
-  private JTextField chatbox;
 
   private HanabiClient() {
     setLayout(new MigLayout("insets 20, gap 0"));
@@ -82,13 +81,13 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     JPanel ret = new GPanel();
 
     JScrollPane scroll = new JScrollPane(output);
+    final JTextField chatbox = new JTextField();
 
     output.setEditable(false);
     output.setLineWrap(true);
     output.setWrapStyleWord(true);
 
     ret.add(scroll, "width 100%, height 70%, wrap 10");
-    chatbox = new JTextField();
     chatbox.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent arg0) {
