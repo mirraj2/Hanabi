@@ -45,7 +45,6 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   private static final boolean ROTATE_SELF_TO_TOP = false;
 
   private ClientConnection conn;
-  private ConnectionListener listener = this;
   private String username;
   private Json state;
   private JComponent leftSide = new JPanel(new MigLayout("insets 0, gap 0"));
@@ -240,7 +239,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     connect.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        conn = new ClientConnection(listener, (String) servers.getSelectedItem(), 19883, false);
+        conn = new ClientConnection(HanabiClient.this, (String) servers.getSelectedItem(), 19883, false);
         try {
           conn.connect(2000);
           logger.debug("Connected!");
