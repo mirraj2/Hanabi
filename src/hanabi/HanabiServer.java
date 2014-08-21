@@ -15,7 +15,10 @@ import jexxus.server.ServerConnection;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
+<<<<<<< HEAD
 import com.google.common.collect.ImmutableList;
+=======
+>>>>>>> added chat functionality to game and pregame
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -58,8 +61,14 @@ public class HanabiServer implements ConnectionListener {
       announce(name + " reset the server.");
       reset();
     } else if (command.equals("chat")) {
+<<<<<<< HEAD
       announce(json.get("message"));
     } else {
+=======
+      chat(json.get("message"));
+    }
+    else {
+>>>>>>> added chat functionality to game and pregame
       logger.error("Don't know command: " + json);
     }
 
@@ -318,6 +327,10 @@ public class HanabiServer implements ConnectionListener {
 
   private void announce(String s) {
     sendToAll(Json.object().with("command", "announce").with("text", s));
+  }
+
+  private void chat(String msg) {
+    announce(msg);
   }
 
   private void sendUpdate() {

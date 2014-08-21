@@ -100,7 +100,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
         chatbox.setText("");
       }
     });
-    ret.add(chatbox, "width 100%, height pref!");
+    ret.add(chatbox, "width 100%, height pref!, wrap 10");
     ret.add(discardLabel = new GLabel("Discard Pile").bold(), "wrap 10");
     ret.add(discardPanel, "width 100%, height 30%, wrap 10");
     ret.add(newGameButton = new GButton(newGameAction));
@@ -138,7 +138,6 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     newGameButton.setVisible(inGame());
     discardPanel.setVisible(inGame());
     discardLabel.setVisible(inGame());
-    chatbox.setVisible(inGame());
 
     if (!inGame()) {
       lobbyUI();
