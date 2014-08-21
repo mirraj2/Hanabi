@@ -35,10 +35,10 @@ public class HanabiServer implements ConnectionListener {
     String name = connMap.get(from);
 
     Json json = new Json(data);
-    
+
     String command = json.get("command");
     Json watchersJson = state.getJson("watchers");
-    if(command.equals("login")){
+    if (command.equals("login")) {
       String user = json.get("user");
       connMap.put(from, user);
       watchersJson.add(user);
@@ -58,8 +58,7 @@ public class HanabiServer implements ConnectionListener {
       reset();
     } else if (command.equals("chat")) {
       announce(json.get("message"));
-    }
-    else {
+    } else {
       logger.error("Don't know command: " + json);
     }
 
@@ -71,7 +70,9 @@ public class HanabiServer implements ConnectionListener {
     players = Json.array();
     board = Json.array();
     discard = Json.array();
-    state = Json.object().with("board", board).with("players", players).with("watchers", watchers).with("discard", discard);
+    state =
+        Json.object().with("board", board).with("players", players).with("watchers", watchers)
+            .with("discard", discard).with("gameOver", false);
     deck = Json.array();
 
     for (String player : connMap.values()) {
@@ -142,23 +143,71 @@ public class HanabiServer implements ConnectionListener {
         // they played a 5, so increase the number of hints by 1
         state.with("cluesLeft", state.getInt("cluesLeft") + 1);
       }
+      if (checkForWin()) {
+        announce("You win!");
+        state.with("gameOver", true);
+      }
     } else {
       // oh noo!
       state.with("mistakesLeft", state.getInt("mistakesLeft") - 1);
       announce(from + " tried to place a " + c + " " + card.getInt("rank") + " :(");
+      if (state.getInt("mistakesLeft") <= 0) {
+        announce("You've run out of bombs. You lose!");
+        state.with("gameOver", true);
+      }
+      if (checkForLoss(card)) {
+        announce("You can no longer complete the stacks. You lose!");
+        state.with("gameOver", true);
+      }
       discard.add(card);
     }
-
     nextTurn();
+  }
+
+  private boolean checkForWin() {
+    for (Json boardSlot : board.asJsonArray()) {
+      int rank = boardSlot.getInt("rank");
+      if (rank != 5) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private boolean checkForLoss(Json c) {
+    int rank = c.getInt("rank");
+    CardColor color = CardColor.valueOf(c.get("color"));
+    if (rank == 5) {
+      return true;
+    }
+    int match = 0;
+    for (Json card : discard.asJsonArray()) {
+      if (card.getInt("rank") == rank && CardColor.valueOf(card.get("color")).equals(color)) {
+        match++;
+      }
+    }
+    if (rank == 1 && match == 2) {
+      return true;
+    } else if (match == 1) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   private void discard(int index, String from) {
     checkState(state.get("turn").equals(from));
 
     Json card = removeAndReplace(index, from);
-    state.with("cluesLeft", state.getInt("cluesLeft") + 1);
-    
+    if (state.getInt("cluesLeft") < 8) {
+      state.with("cluesLeft", state.getInt("cluesLeft") + 1);
+    }
+
     announce(from + " discarded: " + card.get("color") + " " + card.getInt("rank"));
+    if (checkForLoss(card)) {
+      announce("You can no longer complete the stacks. You lose!");
+      state.with("gameOver", true);
+    }
     discard.add(card);
 
     nextTurn();
@@ -182,7 +231,12 @@ public class HanabiServer implements ConnectionListener {
     int index = getCurrentPlayerIndex();
     index = (index + 1) % players.size();
 
-    state.with("turn", players.asJsonArray().get(index).get("name"));
+    if (state.getBoolean("gameOver") != true) {
+      state.with("turn", players.asJsonArray().get(index).get("name"));
+    } else {
+      announce("Restarting game!");
+      reset();
+    }
   }
 
   private int getCurrentPlayerIndex() {
@@ -261,9 +315,7 @@ public class HanabiServer implements ConnectionListener {
   }
 
   private void sendUpdate() {
-    Json json = Json.object()
-        .with("command", "state")
-        .with("state", state);
+    Json json = Json.object().with("command", "state").with("state", state);
 
     sendToAll(json);
   }
