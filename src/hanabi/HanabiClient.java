@@ -7,12 +7,14 @@ import jasonlib.swing.component.GLabel;
 import jasonlib.swing.component.GPanel;
 import jasonlib.swing.component.GTextField;
 import jasonlib.swing.global.Components;
+
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
@@ -21,15 +23,19 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+
 import jexxus.client.ClientConnection;
 import jexxus.common.Connection;
 import jexxus.common.ConnectionListener;
 import jexxus.server.ServerConnection;
 import net.miginfocom.swing.MigLayout;
+
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+
 import com.google.common.base.Throwables;
 
 public class HanabiClient extends GPanel implements ConnectionListener {
@@ -47,6 +53,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   private DiscardPanel discardPanel = new DiscardPanel();
   private boolean loggedIn = false;
   private GButton newGameButton;
+  private JTextField chatbox;
 
   private HanabiClient() {
     setLayout(new MigLayout("insets 20, gap 0"));
@@ -81,6 +88,16 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     output.setWrapStyleWord(true);
 
     ret.add(scroll, "width 100%, height 70%, wrap 10");
+    chatbox = new JTextField();
+    chatbox.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent arg0) {
+        send(Json.object().with("command", "announce")
+            .with("text", username + ": " + chatbox.getText()));
+        chatbox.setText("");
+      }
+    });
+    ret.add(chatbox, "width 100%, height pref!");
     ret.add(discardLabel = new GLabel("Discard Pile").bold(), "wrap 10");
     ret.add(discardPanel, "width 100%, height 30%, wrap 10");
     ret.add(newGameButton = new GButton(newGameAction));
@@ -118,6 +135,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     newGameButton.setVisible(inGame());
     discardPanel.setVisible(inGame());
     discardLabel.setVisible(inGame());
+    chatbox.setVisible(inGame());
 
     if (!inGame()) {
       lobbyUI();
