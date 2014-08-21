@@ -35,10 +35,10 @@ public class HanabiServer implements ConnectionListener {
     String name = connMap.get(from);
 
     Json json = new Json(data);
-    
+
     String command = json.get("command");
     Json watchersJson = state.getJson("watchers");
-    if(command.equals("login")){
+    if (command.equals("login")) {
       String user = json.get("user");
       connMap.put(from, user);
       watchersJson.add(user);
@@ -58,8 +58,7 @@ public class HanabiServer implements ConnectionListener {
       reset();
     } else if (command.equals("chat")) {
       announce(json.get("message"));
-    }
-    else {
+    } else {
       logger.error("Don't know command: " + json);
     }
 
@@ -157,7 +156,7 @@ public class HanabiServer implements ConnectionListener {
 
     Json card = removeAndReplace(index, from);
     state.with("cluesLeft", state.getInt("cluesLeft") + 1);
-    
+
     announce(from + " discarded: " + card.get("color") + " " + card.getInt("rank"));
     discard.add(card);
 
@@ -261,9 +260,7 @@ public class HanabiServer implements ConnectionListener {
   }
 
   private void sendUpdate() {
-    Json json = Json.object()
-        .with("command", "state")
-        .with("state", state);
+    Json json = Json.object().with("command", "state").with("state", state);
 
     sendToAll(json);
   }
