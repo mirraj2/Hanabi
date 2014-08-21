@@ -83,7 +83,6 @@ public class HanabiClient extends GPanel implements ConnectionListener {
 
     JScrollPane scroll = new JScrollPane(output);
     final JTextField chatbox = new JTextField();
-
     output.setEditable(false);
     output.setLineWrap(true);
     output.setWrapStyleWord(true);
