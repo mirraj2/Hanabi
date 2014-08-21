@@ -12,6 +12,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 
@@ -62,6 +63,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   private GTextField usernameField;
   public JCheckBox raise = new JCheckBox("Raise");
   public JCheckBox outline = new JCheckBox("Outline");
+  public JComboBox<String> colorChooser = new JComboBox<String>();
 
   private HanabiClient() {
     setLayout(new MigLayout("insets 20, gap 0"));
@@ -69,6 +71,19 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     setBackground(new Color(240, 240, 240));
     raise.addActionListener(repaintAction);
     outline.addActionListener(repaintAction);
+    Field[] fieldArray = Color.class.getDeclaredFields();
+
+    for (Field field : fieldArray) {
+      if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+        String c = field.toString();
+        c = c.substring(c.lastIndexOf('.') + 1);
+        if (c.toUpperCase().equals(c)) {
+          System.out.println(c);
+          colorChooser.addItem(c);
+        }
+      }
+    }
+    colorChooser.addActionListener(repaintAction);
     initLoginUI();
   }
 
@@ -183,9 +198,10 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     leftSide.add(new GLabel(state.getJson("deck").size() + " cards in deck").bold(), "split 3");
     leftSide.add(new GLabel(state.getInt("cluesLeft") + " clues").bold(), "gapleft 20");
     leftSide.add(new GLabel(state.getInt("mistakesLeft") + " bombs left").bold(), "wrap 10, gapleft 20");
-    leftSide.add(new GLabel("Indicate Hints:"), "split 3");
+    leftSide.add(new GLabel("Indicate Hints:"), "split 4");
     leftSide.add(raise, "gapleft 20");
-    leftSide.add(outline, "wrap 10, gapleft 20");
+    leftSide.add(outline, "gapleft 20");
+    leftSide.add(colorChooser, "wrap 10, gapleft 20");
 
     int height = 100 / players.size();
 
