@@ -7,20 +7,37 @@ import jasonlib.swing.component.GLabel;
 import jasonlib.swing.component.GPanel;
 import jasonlib.swing.component.GTextField;
 import jasonlib.swing.global.Components;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collections;
 import java.util.List;
-import javax.swing.*;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
 import jexxus.client.ClientConnection;
 import jexxus.common.Connection;
 import jexxus.common.ConnectionListener;
 import jexxus.server.ServerConnection;
 import net.miginfocom.swing.MigLayout;
+
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+
 import com.google.common.base.Throwables;
 
 public class HanabiClient extends GPanel implements ConnectionListener {
@@ -43,11 +60,15 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   private GButton toggleGame;
   private JComboBox<String> servers;
   private GTextField usernameField;
+  public JCheckBox raise = new JCheckBox("Raise");
+  public JCheckBox outline = new JCheckBox("Outline");
 
   private HanabiClient() {
     setLayout(new MigLayout("insets 20, gap 0"));
     setOpaque(true);
     setBackground(new Color(240, 240, 240));
+    raise.addActionListener(repaintAction);
+    outline.addActionListener(repaintAction);
     initLoginUI();
   }
 
@@ -95,6 +116,15 @@ public class HanabiClient extends GPanel implements ConnectionListener {
 
     return ret;
   }
+  
+  private Action repaintAction = new AbstractAction("repaint") {
+
+    @Override
+    public void actionPerformed(ActionEvent arg0) {
+      refreshUI();
+    }
+    
+  };
 
   private Action newGameAction = new AbstractAction("New Game") {
     @Override
@@ -153,6 +183,9 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     leftSide.add(new GLabel(state.getJson("deck").size() + " cards in deck").bold(), "split 3");
     leftSide.add(new GLabel(state.getInt("cluesLeft") + " clues").bold(), "gapleft 20");
     leftSide.add(new GLabel(state.getInt("mistakesLeft") + " bombs left").bold(), "wrap 10, gapleft 20");
+    leftSide.add(new GLabel("Indicate Hints:"), "split 3");
+    leftSide.add(raise, "gapleft 20");
+    leftSide.add(outline, "wrap 10, gapleft 20");
 
     int height = 100 / players.size();
 
