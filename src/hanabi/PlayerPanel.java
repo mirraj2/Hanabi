@@ -4,6 +4,7 @@ import jasonlib.IO;
 import jasonlib.Json;
 import jasonlib.Rect;
 import jasonlib.swing.Graphics3D;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -12,11 +13,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.List;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+
 import com.google.common.collect.Lists;
 
 public class PlayerPanel extends JComponent {
@@ -50,14 +53,20 @@ public class PlayerPanel extends JComponent {
     int h = getHeight() - 2 * gap;
 
     int x = leftGap;
-    int y = gap;
+    int y = gap + 5;
     Font font = new Font("Arial", Font.BOLD, 50);
 
     for (Json card : Lists.reverse(hand)) {
       int rank = card.getInt("rank");
       CardColor c = CardColor.valueOf(card.get("color"));
 
-      Rect r = new Rect(x, y, w, h);
+      Rect r;
+
+      if (card.has("showRank") || card.has("showColor")) {
+        r = new Rect(x, y - 10, w, h);
+      } else {
+        r = new Rect(x, y, w, h);
+      }
 
       boolean showInfo = !this.myHand;
       if (onEye) {
