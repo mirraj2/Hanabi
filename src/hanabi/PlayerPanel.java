@@ -4,6 +4,7 @@ import jasonlib.IO;
 import jasonlib.Json;
 import jasonlib.Rect;
 import jasonlib.swing.Graphics3D;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -12,11 +13,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.List;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+
 import com.google.common.collect.Lists;
 
 public class PlayerPanel extends JComponent {
@@ -55,18 +58,26 @@ public class PlayerPanel extends JComponent {
 
     for (Json card : Lists.reverse(hand)) {
       int rank = card.getInt("rank");
+
       CardColor c = CardColor.valueOf(card.get("color"));
 
       Rect r = new Rect(x, y, w, h);
+      
+      boolean knownInfo = card.has("showRank") || card.has("showColor");
 
       boolean showInfo = !this.myHand;
       if (onEye) {
         showInfo = false;
       }
 
-      g.color(Color.black).fill(r);
+      if (knownInfo) {
+        g.color(Color.red).fill(r);
+        g.color(Color.black).fill(r.grow(-6, -6));
+      } else {
+        g.color(Color.black).fill(r);
+      }
       if (showInfo || card.has("showColor")) {
-        g.color(c.getColor()).fill(r.grow(-3, -3));
+        g.color(c.getColor()).fill(r.grow(-6, -6));
       }
       if (rank > 0) {
         g.font(font).color(Color.white).text(showInfo || card.has("showRank") ? rank + "" : "?", r);

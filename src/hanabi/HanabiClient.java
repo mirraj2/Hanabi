@@ -44,7 +44,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
 
   private static final boolean ROTATE_SELF_TO_TOP = false;
 
-  private ClientConnection conn = new ClientConnection(this, "home.jasonmirra.com", 19883, false);
+  private ClientConnection conn = new ClientConnection(this, "localhost", 19883, false);
   private String username;
   private Json state;
   private JComponent leftSide = new JPanel(new MigLayout("insets 0, gap 0"));
