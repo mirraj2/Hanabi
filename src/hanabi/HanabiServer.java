@@ -62,10 +62,14 @@ public class HanabiServer implements ConnectionListener {
       reset();
     } else if (command.equals("chat")) {
 <<<<<<< HEAD
+<<<<<<< HEAD
       announce(json.get("message"));
     } else {
 =======
       chat(json.get("message"));
+=======
+      announce(json.get("message"));
+>>>>>>> resolving pull comments.
     }
     else {
 >>>>>>> added chat functionality to game and pregame
@@ -327,10 +331,6 @@ public class HanabiServer implements ConnectionListener {
 
   private void announce(String s) {
     sendToAll(Json.object().with("command", "announce").with("text", s));
-  }
-
-  private void chat(String msg) {
-    announce(msg);
   }
 
   private void sendUpdate() {

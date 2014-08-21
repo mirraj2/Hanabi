@@ -53,7 +53,6 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   private DiscardPanel discardPanel = new DiscardPanel();
   private boolean loggedIn = false;
   private GButton newGameButton;
-  private JTextField chatbox;
 
   private HanabiClient() {
     setLayout(new MigLayout("insets 20, gap 0"));
@@ -86,7 +85,6 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     output.setEditable(false);
     output.setLineWrap(true);
     output.setWrapStyleWord(true);
-
     ret.add(scroll, "width 100%, height 70%, wrap 10");
 
     chatbox.addActionListener(new ActionListener() {
