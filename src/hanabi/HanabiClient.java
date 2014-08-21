@@ -13,10 +13,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -44,7 +44,8 @@ public class HanabiClient extends GPanel implements ConnectionListener {
 
   private static final boolean ROTATE_SELF_TO_TOP = false;
 
-  private ClientConnection conn = new ClientConnection(this, "home.jasonmirra.com", 19883, false);
+  private ClientConnection conn;
+  private ConnectionListener listener = this;
   private String username;
   private Json state;
   private JComponent leftSide = new JPanel(new MigLayout("insets 0, gap 0"));
@@ -109,8 +110,9 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     public void actionPerformed(ActionEvent e) {
       int i =
           JOptionPane.showConfirmDialog(HanabiClient.this,
-              "This will reset the server kicking all players out" +
-                  " of their current game. Are you sure you want to do this?", "Reset Server?", JOptionPane.YES_NO_OPTION);
+              "This will reset the server kicking all players out"
+                  + " of their current game. Are you sure you want to do this?", "Reset Server?",
+              JOptionPane.YES_NO_OPTION);
       if (i == JOptionPane.YES_OPTION) {
         send(Json.object().with("command", "reset"));
       }
@@ -162,12 +164,14 @@ public class HanabiClient extends GPanel implements ConnectionListener {
 
     leftSide.add(new GLabel(state.getJson("deck").size() + " cards in deck").bold(), "split 3");
     leftSide.add(new GLabel(state.getInt("cluesLeft") + " clues").bold(), "gapleft 20");
-    leftSide.add(new GLabel(state.getInt("mistakesLeft") + " bombs left").bold(), "wrap 10, gapleft 20");
+    leftSide.add(new GLabel(state.getInt("mistakesLeft") + " bombs left").bold(),
+        "wrap 10, gapleft 20");
 
     int height = 100 / players.size();
 
     leftSide.add(new GLabel("Board").bold(), "wrap 0");
-    leftSide.add(new PlayerPanel(this, "Board", state.getJson("board").asJsonArray(), false, false),
+    leftSide.add(
+        new PlayerPanel(this, "Board", state.getJson("board").asJsonArray(), false, false),
         "width 100%, height min(" + height + "%,100), wrap 15");
     boolean myTurn = username.equals(state.get("turn"));
 
@@ -176,8 +180,10 @@ public class HanabiClient extends GPanel implements ConnectionListener {
 
       boolean hidden = name.equals(username);
 
-      leftSide.add(new GLabel(state.get("turn").equals(name) ? name + " (My Turn)" : name).bold(), "wrap 0");
-      leftSide.add(new PlayerPanel(this, name, player.getJson("hand").asJsonArray(), hidden, myTurn),
+      leftSide.add(new GLabel(state.get("turn").equals(name) ? name + " (My Turn)" : name).bold(),
+          "wrap 0");
+      leftSide.add(
+          new PlayerPanel(this, name, player.getJson("hand").asJsonArray(), hidden, myTurn),
           "width 100%, height min(" + height + "%,100), wrap 15");
     }
 
@@ -205,33 +211,64 @@ public class HanabiClient extends GPanel implements ConnectionListener {
 
   private void initLoginUI() {
     final GTextField usernameField = new GTextField();
-    final JLabel label = new GLabel("Connecting to server...").bold();
-    add(label, "");
-    add(usernameField, "gapleft 10, width 200!");
-    usernameField.setVisible(false);
-
-    Executors.newSingleThreadExecutor().execute(new Runnable() {
+    final JLabel usernameLabel = new GLabel("Enter your username:");
+    final JLabel serverLabel = new GLabel("Select a server:");
+    final JLabel statusLabel = new GLabel("");
+    final GButton connect = new GButton("Connect");
+    final JComboBox<String> servers = new JComboBox<String>();
+    servers.addItem("home.jasonmirra.com");
+    servers.addItem("home.tommartell.com");
+    servers.addItem("localhost");
+    servers.addItem("other");
+    servers.addActionListener(new ActionListener() {
       @Override
-      public void run() {
-        try {
-          conn.connect(2000);
-          logger.debug("Connected!");
-          label.setText("Enter your username:");
-          usernameField.setVisible(true);
-        } catch (Exception e) {
-          logger.error("Failed to connect.");
-          label.setText("Failed to connect.");
+      public void actionPerformed(ActionEvent e) {
+        if (servers.getSelectedItem().equals("other")) {
+          String i = JOptionPane.showInputDialog("What is the server address?");
+          servers.addItem(i);
+          servers.setSelectedItem(i);
         }
       }
     });
 
-    usernameField.addActionListener(new ActionListener() {
+    add(usernameLabel, "");
+    add(usernameField, "gapleft 10, width 200!, wrap 10");
+    add(serverLabel, "");
+    add(servers, "gapleft 10, width pref!, wrap 10");
+    add(connect, "wrap 10");
+    add(statusLabel, "");
+    usernameLabel.setVisible(true);
+    usernameField.setVisible(true);
+    serverLabel.setVisible(true);
+    servers.setVisible(true);
+    connect.setVisible(true);
+    statusLabel.setVisible(false);
+
+    connect.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
+        conn = new ClientConnection(listener, (String) servers.getSelectedItem(), 19883, false);
+        try {
+          conn.connect(2000);
+          logger.debug("Connected!");
+        } catch (Exception ex) {
+          logger.error("Failed to connect.");
+          statusLabel.setText("Failed to connect.");
+          statusLabel.setVisible(true);
+          return;
+        }
         username = usernameField.getText();
         send(Json.object().with("command", "login").with("user", username));
+        usernameLabel.setVisible(false);
+        usernameField.setVisible(false);
+        serverLabel.setVisible(false);
+        servers.setVisible(false);
+        connect.setVisible(false);
       }
     });
+
+
+
   }
 
   private void send(Json json) {
@@ -273,10 +310,8 @@ public class HanabiClient extends GPanel implements ConnectionListener {
       @Override
       public void run() {
         try {
-          UIManager.setLookAndFeel(
-              UIManager.getSystemLookAndFeelClassName());
-        }
-        catch (Exception e) {
+          UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
           throw Throwables.propagate(e);
         }
 
