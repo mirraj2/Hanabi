@@ -260,7 +260,9 @@ public class HanabiServer implements ConnectionListener {
   }
 
   private void sendUpdate() {
-    Json json = Json.object().with("command", "state").with("state", state);
+    Json json = Json.object()
+        .with("command", "state")
+        .with("state", state);
 
     sendToAll(json);
   }
