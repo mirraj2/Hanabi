@@ -53,6 +53,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   private DiscardPanel discardPanel = new DiscardPanel();
   private boolean loggedIn = false;
   private GButton newGameButton;
+  private JTextField chatbox;
 
   private HanabiClient() {
     setLayout(new MigLayout("insets 20, gap 0"));
@@ -87,15 +88,19 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     output.setWrapStyleWord(true);
 
     ret.add(scroll, "width 100%, height 70%, wrap 10");
+
     chatbox.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent arg0) {
-        send(Json.object().with("command", "chat")
-            .with("message", username + ": " + chatbox.getText()));
+        if (chatbox.getText().isEmpty()) {
+          return;
+        }
+        send(Json.object().with("command", "announce")
+            .with("text", username + ": " + chatbox.getText()));
         chatbox.setText("");
       }
     });
-    ret.add(chatbox, "width 100%, height pref!, wrap 10");
+    ret.add(chatbox, "width 100%, height pref!");
     ret.add(discardLabel = new GLabel("Discard Pile").bold(), "wrap 10");
     ret.add(discardPanel, "width 100%, height 30%, wrap 10");
     ret.add(newGameButton = new GButton(newGameAction));
@@ -133,6 +138,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     newGameButton.setVisible(inGame());
     discardPanel.setVisible(inGame());
     discardLabel.setVisible(inGame());
+    chatbox.setVisible(inGame());
 
     if (!inGame()) {
       lobbyUI();
@@ -156,8 +162,6 @@ public class HanabiClient extends GPanel implements ConnectionListener {
       }
       Collections.rotate(players, -myIndex);
     }
-
-
 
     leftSide.add(new GLabel(state.getJson("deck").size() + " cards in deck").bold(), "split 3");
     leftSide.add(new GLabel(state.getInt("cluesLeft") + " clues").bold(), "gapleft 20");
