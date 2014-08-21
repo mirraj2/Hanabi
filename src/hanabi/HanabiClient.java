@@ -44,7 +44,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
 
   private static final boolean ROTATE_SELF_TO_TOP = false;
 
-  private ClientConnection conn = new ClientConnection(this, "home.jasonmirra.com", 19883, false);
+  private ClientConnection conn = new ClientConnection(this, "localhost", 19883, false);
   private String username;
   private Json state;
   private JComponent leftSide = new JPanel(new MigLayout("insets 0, gap 0"));
@@ -92,12 +92,12 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     chatbox.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent arg0) {
-        send(Json.object().with("command", "announce")
-            .with("text", username + ": " + chatbox.getText()));
+        send(Json.object().with("command", "chat")
+            .with("message", username + ": " + chatbox.getText()));
         chatbox.setText("");
       }
     });
-    ret.add(chatbox, "width 100%, height pref!");
+    ret.add(chatbox, "width 100%, height pref!, wrap 10");
     ret.add(discardLabel = new GLabel("Discard Pile").bold(), "wrap 10");
     ret.add(discardPanel, "width 100%, height 30%, wrap 10");
     ret.add(newGameButton = new GButton(newGameAction));
@@ -135,7 +135,6 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     newGameButton.setVisible(inGame());
     discardPanel.setVisible(inGame());
     discardLabel.setVisible(inGame());
-    chatbox.setVisible(inGame());
 
     if (!inGame()) {
       lobbyUI();
