@@ -229,11 +229,6 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     add(servers, "gapleft 10, width pref!, wrap 10");
     add(connect, "wrap 10");
     add(statusLabel, "");
-    usernameLabel.setVisible(true);
-    usernameField.setVisible(true);
-    serverLabel.setVisible(true);
-    servers.setVisible(true);
-    connect.setVisible(true);
     statusLabel.setVisible(false);
 
     connect.addActionListener(new ActionListener() {
@@ -251,11 +246,6 @@ public class HanabiClient extends GPanel implements ConnectionListener {
         }
         username = usernameField.getText();
         send(Json.object().with("command", "login").with("user", username));
-        usernameLabel.setVisible(false);
-        usernameField.setVisible(false);
-        serverLabel.setVisible(false);
-        servers.setVisible(false);
-        connect.setVisible(false);
       }
     });
 
