@@ -132,6 +132,10 @@ public class HanabiServer implements ConnectionListener {
       // card successfully placed
       boardSlot.with("rank", rank + 1);
       announce(from + " successfully placed a " + c + " " + (rank + 1) + "!");
+      if (rank + 1 == 5) {
+        // they played a 5, so increase the number of hints by 1
+        state.with("cluesLeft", state.getInt("cluesLeft") + 1);
+      }
     } else {
       // oh noo!
       state.with("mistakesLeft", state.getInt("mistakesLeft") - 1);
