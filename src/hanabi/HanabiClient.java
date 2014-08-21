@@ -142,8 +142,17 @@ public class HanabiClient extends GPanel implements ConnectionListener {
       Collections.rotate(players, -myIndex);
     }
 
-    leftSide.add(new GLabel("Board").bold(), "wrap 5");
-    leftSide.add(new PlayerPanel(this, "Board", state.getJson("board").asJsonArray(), false, false), "width 100%, height 100!, wrap 20");
+
+
+    leftSide.add(new GLabel(state.getJson("deck").size() + " cards in deck").bold(), "split 3");
+    leftSide.add(new GLabel(state.getInt("cluesLeft") + " clues").bold(), "gapleft 20");
+    leftSide.add(new GLabel(state.getInt("mistakesLeft") + " bombs left").bold(), "wrap 10, gapleft 20");
+
+    int height = 100 / players.size();
+
+    leftSide.add(new GLabel("Board").bold(), "wrap 0");
+    leftSide.add(new PlayerPanel(this, "Board", state.getJson("board").asJsonArray(), false, false),
+        "width 100%, height min(" + height + "%,100), wrap 15");
     boolean myTurn = username.equals(state.get("turn"));
 
     for (Json player : players) {
@@ -151,14 +160,11 @@ public class HanabiClient extends GPanel implements ConnectionListener {
 
       boolean hidden = name.equals(username);
 
-      leftSide.add(new GLabel(state.get("turn").equals(name) ? name + " (My Turn)" : name).bold(), "wrap 5");
+      leftSide.add(new GLabel(state.get("turn").equals(name) ? name + " (My Turn)" : name).bold(), "wrap 0");
       leftSide.add(new PlayerPanel(this, name, player.getJson("hand").asJsonArray(), hidden, myTurn),
-          "width 100%, height 100!, wrap 20");
+          "width 100%, height min(" + height + "%,100), wrap 15");
     }
 
-    leftSide.add(new GLabel(state.getJson("deck").size() + " cards in deck").bold(), "wrap 5");
-    leftSide.add(new GLabel(state.getInt("cluesLeft") + " clues left").bold(), "wrap 5");
-    leftSide.add(new GLabel(state.getInt("mistakesLeft") + " mistakes left").bold(), "wrap 10");
 
     discardPanel.update(state.getJson("discard"));
   }

@@ -237,7 +237,7 @@ public class HanabiServer implements ConnectionListener {
     if (user != null) {
       state.getJson("watchers").remove(user);
       sendUpdate();
-      announce(user + " has disconneted.");
+      announce(user + " has disconnected.");
     }
   }
 
