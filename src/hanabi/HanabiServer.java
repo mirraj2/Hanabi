@@ -186,8 +186,12 @@ public class HanabiServer implements ConnectionListener {
         match++;
       }
     }
-    if (rank == 1 && match == 2) {
-      return true;
+    if (rank == 1) {
+      if (match == 2) {
+        return true;
+      } else {
+        return false;
+      }
     } else if (match == 1) {
       return true;
     } else {
@@ -222,6 +226,10 @@ public class HanabiServer implements ConnectionListener {
     if (!deck.isEmpty()) {
       hand.add(deck.asJsonArray().get(0));
       deck.remove(0);
+    } else if (!state.getBoolean("lastRound")) {
+      state.with("lastRound", true);
+      state.with("endOn", player);
+      announce("The deck is now empty. Each player gets one more turn.");
     }
 
     return card;
@@ -233,10 +241,11 @@ public class HanabiServer implements ConnectionListener {
 
     if (state.getBoolean("gameOver") != true) {
       state.with("turn", players.asJsonArray().get(index).get("name"));
-    } else {
-      announce("Restarting game!");
-      reset();
     }
+    // else {
+    // announce("Restarting game!");
+    // reset();
+    // }
   }
 
   private int getCurrentPlayerIndex() {
@@ -272,6 +281,7 @@ public class HanabiServer implements ConnectionListener {
     }
 
     state.with("cluesLeft", 8).with("mistakesLeft", 3);
+    state.with("lastRound", false);
 
     List<Json> cards = Lists.newArrayList();
     for (CardColor c : CardColor.values()) {
