@@ -69,21 +69,10 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     setLayout(new MigLayout("insets 20, gap 0"));
     setOpaque(true);
     setBackground(new Color(240, 240, 240));
+    raise.setSelected(true);
     raise.addActionListener(repaintAction);
+    outline.setSelected(true);
     outline.addActionListener(repaintAction);
-    Field[] fieldArray = Color.class.getDeclaredFields();
-
-    for (Field field : fieldArray) {
-      if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
-        String c = field.toString();
-        c = c.substring(c.lastIndexOf('.') + 1);
-        if (c.toUpperCase().equals(c)) {
-          System.out.println(c);
-          colorChooser.addItem(c);
-        }
-      }
-    }
-    colorChooser.addActionListener(repaintAction);
     initLoginUI();
   }
 
@@ -132,15 +121,6 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     return ret;
   }
   
-  private Action repaintAction = new AbstractAction("repaint") {
-
-    @Override
-    public void actionPerformed(ActionEvent arg0) {
-      refreshUI();
-    }
-    
-  };
-
   private Action newGameAction = new AbstractAction("New Game") {
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -152,6 +132,39 @@ public class HanabiClient extends GPanel implements ConnectionListener {
         send(Json.object().with("command", "reset"));
       }
     }
+  };
+
+  public JComponent createSettingsPanel() {
+    JPanel ret = new GPanel();
+
+    Field[] fieldArray = Color.class.getDeclaredFields();
+
+    for (Field field : fieldArray) {
+      if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+        String c = field.toString();
+        c = c.substring(c.lastIndexOf('.') + 1);
+        if (c.toUpperCase().equals(c)) {
+          colorChooser.addItem(c);
+        }
+      }
+    }
+    colorChooser.addActionListener(repaintAction);
+
+    ret.add(new GLabel("Indicate Hints:"), "split 4");
+    ret.add(raise, "gapleft 20");
+    ret.add(outline, "gapleft 20");
+    ret.add(colorChooser, "gapleft 20");
+
+    return ret;
+  }
+
+  private Action repaintAction = new AbstractAction("repaint") {
+
+    @Override
+    public void actionPerformed(ActionEvent arg0) {
+      refreshUI();
+    }
+    
   };
 
   private boolean inGame() {
@@ -198,10 +211,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     leftSide.add(new GLabel(state.getJson("deck").size() + " cards in deck").bold(), "split 3");
     leftSide.add(new GLabel(state.getInt("cluesLeft") + " clues").bold(), "gapleft 20");
     leftSide.add(new GLabel(state.getInt("mistakesLeft") + " bombs left").bold(), "wrap 10, gapleft 20");
-    leftSide.add(new GLabel("Indicate Hints:"), "split 4");
-    leftSide.add(raise, "gapleft 20");
-    leftSide.add(outline, "gapleft 20");
-    leftSide.add(colorChooser, "wrap 10, gapleft 20");
+    leftSide.add(createSettingsPanel(), "wrap 10, gapleft 20");
 
     int height = 100 / players.size();
 
