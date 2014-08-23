@@ -187,15 +187,9 @@ public class HanabiServer implements ConnectionListener {
       }
     }
     if (rank == 1) {
-      if (match == 2) {
-        return true;
-      } else {
-        return false;
-      }
-    } else if (match == 1) {
-      return true;
+      return match == 2;
     } else {
-      return false;
+      return match == 1;
     }
   }
 
