@@ -233,14 +233,15 @@ public class HanabiServer implements ConnectionListener {
   private void nextTurn() {
     int index = getCurrentPlayerIndex();
     index = (index + 1) % players.size();
+    String player = players.asJsonArray().get(index).get("name");
 
-    if (state.getBoolean("gameOver") != true) {
-      state.with("turn", players.asJsonArray().get(index).get("name"));
+    if (state.getBoolean("lastRound") && player.equals(state.get("endOn"))) {
+        announce("Out of turns! Game over.");
+        state.with("gameOver", true);
     }
-    // else {
-    // announce("Restarting game!");
-    // reset();
-    // }
+    if (state.getBoolean("gameOver") != true) {
+      state.with("turn", player);
+    }
   }
 
   private int getCurrentPlayerIndex() {
