@@ -1,22 +1,18 @@
 package hanabi;
 
-import static com.google.common.base.Preconditions.checkState;
 import jasonlib.Json;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
 import jexxus.common.Connection;
 import jexxus.common.ConnectionListener;
 import jexxus.server.Server;
 import jexxus.server.ServerConnection;
-
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import static com.google.common.base.Preconditions.checkState;
 
 public class HanabiServer implements ConnectionListener {
 
@@ -153,11 +149,11 @@ public class HanabiServer implements ConnectionListener {
       announce(from + " tried to place a " + c + " " + card.getInt("rank") + " :(");
       if (state.getInt("mistakesLeft") <= 0) {
         announce("You've run out of bombs. You lose!");
-        state.with("gameOver", true);
+        // state.with("gameOver", true);
       }
       if (checkForLoss(card)) {
         announce("You can no longer complete the stacks. You lose!");
-        state.with("gameOver", true);
+        // state.with("gameOver", true);
       }
       discard.add(card);
     }
@@ -186,13 +182,10 @@ public class HanabiServer implements ConnectionListener {
         match++;
       }
     }
-    if (rank == 1 && match == 2) {
-      return true;
-    } else if (match == 1) {
-      return true;
-    } else {
-      return false;
+    if (rank == 1) {
+      return match == 2;
     }
+    return match == 1;
   }
 
   private void discard(int index, String from) {
