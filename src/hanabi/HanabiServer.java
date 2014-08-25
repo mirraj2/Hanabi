@@ -260,7 +260,7 @@ public class HanabiServer implements ConnectionListener {
     checkState(watchers.size() <= 5);
 
     int handSize;
-    if (players.size() <= 3) {
+    if (watchers.size() <= 3) {
       handSize = 5;
     } else {
       handSize = 4;
