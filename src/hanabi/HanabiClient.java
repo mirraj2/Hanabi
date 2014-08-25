@@ -93,8 +93,8 @@ public class HanabiClient extends GPanel implements ConnectionListener {
         if (chatbox.getText().isEmpty()) {
           return;
         }
-        send(Json.object().with("command", "announce")
-            .with("text", username + ": " + chatbox.getText()));
+        send(Json.object().with("command", "chat")
+            .with("message", username + ": " + chatbox.getText()));
         chatbox.setText("");
       }
     });
