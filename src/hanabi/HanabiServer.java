@@ -1,19 +1,23 @@
 package hanabi;
 
+import static com.google.common.base.Preconditions.checkState;
 import jasonlib.Json;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import jexxus.common.Connection;
 import jexxus.common.ConnectionListener;
 import jexxus.server.Server;
 import jexxus.server.ServerConnection;
+
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import static com.google.common.base.Preconditions.checkState;
 
 public class HanabiServer implements ConnectionListener {
 
@@ -217,6 +221,10 @@ public class HanabiServer implements ConnectionListener {
     if (!deck.isEmpty()) {
       hand.add(deck.asJsonArray().get(0));
       deck.remove(0);
+    } else if (!state.getBoolean("lastRound")) {
+      state.with("lastRound", true);
+      state.with("endOn", player);
+      announce("The deck is now empty. Each player gets one more turn.");
     }
 
     return card;
@@ -225,12 +233,14 @@ public class HanabiServer implements ConnectionListener {
   private void nextTurn() {
     int index = getCurrentPlayerIndex();
     index = (index + 1) % players.size();
+    String player = players.asJsonArray().get(index).get("name");
 
+    if (state.getBoolean("lastRound") && player.equals(state.get("endOn"))) {
+        announce("Out of turns! Game over.");
+        state.with("gameOver", true);
+    }
     if (state.getBoolean("gameOver") != true) {
-      state.with("turn", players.asJsonArray().get(index).get("name"));
-    } else {
-      announce("Restarting game!");
-      reset();
+      state.with("turn", player);
     }
   }
 
@@ -267,6 +277,7 @@ public class HanabiServer implements ConnectionListener {
     }
 
     state.with("cluesLeft", 8).with("mistakesLeft", 3);
+    state.with("lastRound", false);
 
     List<Json> cards = Lists.newArrayList();
     for (CardColor c : CardColor.values()) {
