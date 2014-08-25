@@ -10,6 +10,7 @@ import jexxus.server.Server;
 import jexxus.server.ServerConnection;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import static com.google.common.base.Preconditions.checkState;
@@ -318,10 +319,11 @@ public class HanabiServer implements ConnectionListener {
 
   private void sendToAll(Json json) {
     byte[] data = json.asByteArray();
-    for (Connection conn : connMap.keySet()) {
+    for (Connection conn : ImmutableList.copyOf(connMap.keySet())) {
       try {
         conn.send(data);
       } catch (Exception e) {
+        connectionBroken(conn, true);
         e.printStackTrace();
       }
     }
