@@ -7,35 +7,20 @@ import jasonlib.swing.component.GLabel;
 import jasonlib.swing.component.GPanel;
 import jasonlib.swing.component.GTextField;
 import jasonlib.swing.global.Components;
-
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collections;
 import java.util.List;
-
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-
+import javax.swing.*;
 import jexxus.client.ClientConnection;
 import jexxus.common.Connection;
 import jexxus.common.ConnectionListener;
 import jexxus.server.ServerConnection;
 import net.miginfocom.swing.MigLayout;
-
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
-
 import com.google.common.base.Throwables;
 
 public class HanabiClient extends GPanel implements ConnectionListener {
@@ -43,9 +28,12 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   private static final Logger logger = Logger.getLogger(HanabiClient.class);
   private static final boolean ROTATE_SELF_TO_TOP = false;
 
+  public static final String VERSION = "Alpha 2";
+
   private ClientConnection conn;
   private String username;
   private Json state;
+  private final JLabel statusLabel = new GLabel("");
   private JComponent leftSide = new JPanel(new MigLayout("insets 0, gap 0"));
   private JTextArea output = new JTextArea();
   private GLabel discardLabel;
@@ -53,7 +41,6 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   private boolean loggedIn = false;
   private GButton newGameButton;
   private GButton toggleGame;
-  private JLabel statusLabel;
   private JComboBox<String> servers;
   private GTextField usernameField;
 
@@ -246,13 +233,12 @@ public class HanabiClient extends GPanel implements ConnectionListener {
 
     final JLabel usernameLabel = new GLabel("Enter your username:");
     final JLabel serverLabel = new GLabel("Select a server:");
-    statusLabel = new GLabel("");
     final GButton connect = new GButton("Connect");
-    servers = new JComboBox<String>();
-    servers.addItem("home.jasonmirra.com");
-    servers.addItem("home.tommartell.com");
-    servers.addItem("localhost");
-    servers.addItem("other");
+    servers = new JComboBox<String>(new String[] {"home.jasonmirra.com", "home.tommartell.com", "localhost", "other"});
+
+    statusLabel.setForeground(Color.red);
+    statusLabel.setFont(new Font("Arial", Font.BOLD, 16));
+
     servers.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -269,8 +255,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     add(serverLabel, "");
     add(servers, "gapleft 10, width pref!, wrap 10");
     add(connect, "wrap 10");
-    add(statusLabel, "");
-    statusLabel.setVisible(false);
+    add(statusLabel, "span");
 
     connect.addActionListener(loginAction);
   }
@@ -301,7 +286,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
       return;
     }
     username = usernameField.getText();
-    send(Json.object().with("command", "login").with("user", username));
+    send(Json.object().with("command", "login").with("user", username).with("version", VERSION));
   }
 
   private void send(Json json) {
@@ -326,6 +311,8 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     } else if (command.equals("announce")) {
       output.append(json.get("text") + '\n');
       output.setCaretPosition(output.getDocument().getLength());
+    } else if (command.equals("old_version")) {
+      statusLabel.setText("You are running an old version. Download the latest at github.com/mirraj2/Hanabi");
     }
   }
 
