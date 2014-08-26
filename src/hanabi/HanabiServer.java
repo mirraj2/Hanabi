@@ -1,19 +1,23 @@
 package hanabi;
 
+import static com.google.common.base.Preconditions.checkState;
 import jasonlib.Json;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import jexxus.common.Connection;
 import jexxus.common.ConnectionListener;
 import jexxus.server.Server;
 import jexxus.server.ServerConnection;
+
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import static com.google.common.base.Preconditions.checkState;
 
 public class HanabiServer implements ConnectionListener {
 
@@ -71,8 +75,7 @@ public class HanabiServer implements ConnectionListener {
       watchers.add(name);
       for (int i = 0; i < players.size(); i++) {
         if (players.asJsonArray().get(i).get("name").equals(name)) {
-          players.remove(i);
-          break;
+          players.remove(i--);
         }
       }
       announce(name + " left the game.");
