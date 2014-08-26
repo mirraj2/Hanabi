@@ -53,6 +53,9 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   private boolean loggedIn = false;
   private GButton newGameButton;
   private GButton toggleGame;
+  private JLabel statusLabel;
+  private JComboBox<String> servers;
+  private GTextField usernameField;
 
   private HanabiClient() {
     setLayout(new MigLayout("insets 20, gap 0"));
@@ -238,12 +241,14 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   };
 
   private void initLoginUI() {
-    final GTextField usernameField = new GTextField();
+    usernameField = new GTextField();
+    usernameField.addActionListener(loginAction);
+
     final JLabel usernameLabel = new GLabel("Enter your username:");
     final JLabel serverLabel = new GLabel("Select a server:");
-    final JLabel statusLabel = new GLabel("");
+    statusLabel = new GLabel("");
     final GButton connect = new GButton("Connect");
-    final JComboBox<String> servers = new JComboBox<String>();
+    servers = new JComboBox<String>();
     servers.addItem("home.jasonmirra.com");
     servers.addItem("home.tommartell.com");
     servers.addItem("localhost");
@@ -267,23 +272,36 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     add(statusLabel, "");
     statusLabel.setVisible(false);
 
-    connect.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        conn = new ClientConnection(HanabiClient.this, (String) servers.getSelectedItem(), 19883, false);
-        try {
-          conn.connect(2000);
-          logger.debug("Connected!");
-        } catch (Exception ex) {
-          logger.error("Failed to connect.");
-          statusLabel.setText("Failed to connect.");
-          statusLabel.setVisible(true);
-          return;
-        }
-        username = usernameField.getText();
-        send(Json.object().with("command", "login").with("user", username));
-      }
-    });
+    connect.addActionListener(loginAction);
+  }
+
+  private Action loginAction = new AbstractAction("Login") {
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      login();
+    }
+  };
+
+  private void login() {
+
+    if (usernameField.getText().equals("")) {
+      statusLabel.setText("You must enter a username.");
+      statusLabel.setVisible(true);
+      return;
+    }
+
+    conn = new ClientConnection(HanabiClient.this, (String) servers.getSelectedItem(), 19883, false);
+    try {
+      conn.connect(2000);
+      logger.debug("Connected!");
+    } catch (Exception ex) {
+      logger.error("Failed to connect.");
+      statusLabel.setText("Failed to connect.");
+      statusLabel.setVisible(true);
+      return;
+    }
+    username = usernameField.getText();
+    send(Json.object().with("command", "login").with("user", username));
   }
 
   private void send(Json json) {
