@@ -1,19 +1,23 @@
 package hanabi;
 
+import static com.google.common.base.Preconditions.checkState;
 import jasonlib.Json;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import jexxus.common.Connection;
 import jexxus.common.ConnectionListener;
 import jexxus.server.Server;
 import jexxus.server.ServerConnection;
+
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import static com.google.common.base.Preconditions.checkState;
 
 public class HanabiServer implements ConnectionListener {
 
@@ -21,7 +25,7 @@ public class HanabiServer implements ConnectionListener {
 
   private Map<Connection, String> connMap = Maps.newConcurrentMap();
 
-  private Json watchers, players, board, discard, state, deck;
+  private Json watchers, players, board, discard, state, deck, replay;
 
   public HanabiServer() {
     reset();
@@ -90,6 +94,7 @@ public class HanabiServer implements ConnectionListener {
         Json.object().with("board", board).with("players", players).with("watchers", watchers)
             .with("discard", discard).with("gameOver", false).with("status", "lobby");
     deck = Json.array();
+    replay = Json.object().with("turns", Json.array());
 
     for (String player : connMap.values()) {
       watchers.add(player);
@@ -98,6 +103,7 @@ public class HanabiServer implements ConnectionListener {
 
   private void colorHint(String target, int index, String from) {
     checkState(state.get("turn").equals(from));
+    replay.getJson("turns").add(Json.object().with("player", from).with("index", index).with("target", target).with("action", "colorHint"));
 
     int cluesLeft = state.getInt("cluesLeft");
     if (cluesLeft == 0) {
@@ -127,6 +133,7 @@ public class HanabiServer implements ConnectionListener {
 
   private void rankHint(String target, int index, String from) {
     checkState(state.get("turn").equals(from));
+    replay.getJson("turns").add(Json.object().with("player", from).with("index", index).with("target", target).with("action", "rankHint"));
 
     int cluesLeft = state.getInt("cluesLeft");
     if (cluesLeft == 0) {
@@ -156,6 +163,7 @@ public class HanabiServer implements ConnectionListener {
 
   private void play(int index, String from) {
     checkState(state.get("turn").equals(from));
+    replay.getJson("turns").add(Json.object().with("player", from).with("index", index).with("action", "play"));
 
     Json card = removeAndReplace(index, from);
 
@@ -222,6 +230,7 @@ public class HanabiServer implements ConnectionListener {
 
   private void discard(int index, String from) {
     checkState(state.get("turn").equals(from));
+    replay.getJson("turns").add(Json.object().with("player", from).with("index", index));
 
     Json card = removeAndReplace(index, from);
 
@@ -322,8 +331,23 @@ public class HanabiServer implements ConnectionListener {
 
     deck = Json.array(cards);
     state.with("deck", deck).with("turn", players.asJsonArray().get(0).get("name")).with("status", "inGame");
+    replay.with("state", copyBoard());
     sendUpdate();
     announce("Game started!");
+  }
+
+  private Json copyBoard() {
+    Json copy = Json.object();
+    List<Json> cards = state.getJson("deck").asJsonArray();
+    copy.with("deck", Json.array(cards));
+    Json playersArray = Json.array();
+
+    for (Json player : players.asJsonArray()) {
+      Json playerCopy = Json.object().with("name", player.get("name")).with("hand", Json.array(player.getJson("hand")));
+      playersArray.add(playerCopy);
+    }
+    copy.with("players", playersArray);
+    return copy;
   }
 
   @Override
@@ -372,7 +396,6 @@ public class HanabiServer implements ConnectionListener {
     server.startServer();
     logger.debug("Server Started!");
   }
-
 
 
 }
