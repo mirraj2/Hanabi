@@ -38,11 +38,12 @@ public class HanabiServer implements ConnectionListener {
     Json json = new Json(data);
 
     String command = json.get("command");
-    Json watchersJson = state.getJson("watchers");
     if (command.equals("login")) {
       String user = json.get("user");
       connMap.put(from, user);
-      watchersJson.add(user);
+      if (getPlayer(user) == null && !watchers.asStringArray().contains(user)) {
+        watchers.add(user);
+      }
       announce(user + " logged in.");
     } else if (command.equals("start_game")) {
       startGame();
@@ -59,10 +60,23 @@ public class HanabiServer implements ConnectionListener {
       reset();
     } else if (command.equals("chat")) {
       announce(json.get("message"));
+    } else if (command.equals("join")) {
+      watchers.remove(name);
+      Json player = Json.object().with("name", name);
+      players.add(player);
+      announce(name + " joined the game.");
+    } else if (command.equals("leave")) {
+      watchers.add(name);
+      for (int i = 0; i < players.size(); i++) {
+        if (players.asJsonArray().get(i).get("name").equals(name)) {
+          players.remove(i);
+          break;
+        }
+      }
+      announce(name + " left the game.");
     } else {
       logger.error("Don't know command: " + json);
     }
-
     sendUpdate();
   }
 
@@ -73,7 +87,7 @@ public class HanabiServer implements ConnectionListener {
     discard = Json.array();
     state =
         Json.object().with("board", board).with("players", players).with("watchers", watchers)
-            .with("discard", discard).with("gameOver", false);
+            .with("discard", discard).with("gameOver", false).with("status", "lobby");
     deck = Json.array();
 
     for (String player : connMap.values()) {
@@ -152,7 +166,7 @@ public class HanabiServer implements ConnectionListener {
       // oh noo!
       state.with("mistakesLeft", state.getInt("mistakesLeft") - 1);
       announce(from + " tried to place a " + c + " " + card.getInt("rank") + " :(");
-      if (state.getInt("mistakesLeft") <= 0) {
+      if (state.getInt("mistakesLeft") < 0) {
         announce("You've run out of bombs. You lose!");
         // state.with("gameOver", true);
       }
@@ -265,12 +279,11 @@ public class HanabiServer implements ConnectionListener {
   }
 
   private void startGame() {
-    checkState(players.isEmpty());
-    // checkState(watchers.size() >= 2);
-    checkState(watchers.size() <= 5);
+    checkState(players.size() >= 1);
+    checkState(players.size() <= 5);
 
     int handSize;
-    if (watchers.size() <= 3) {
+    if (players.size() <= 3) {
       handSize = 5;
     } else {
       handSize = 4;
@@ -288,16 +301,16 @@ public class HanabiServer implements ConnectionListener {
     }
     Collections.shuffle(cards);
 
-    for (String watcher : watchers) {
+    for (Json player : players.asJsonArray()) {
       List<Json> hand = cards.subList(0, handSize);
-      Json player = Json.object().with("name", watcher).with("hand", Json.array(hand));
-      players.add(player);
+      player.with("hand", Json.array(hand));
       hand.clear(); // remove the hand from the deck
     }
-    watchers.clear();
 
     deck = Json.array(cards);
-    state.with("deck", deck).with("turn", players.asJsonArray().get(0).get("name"));
+    state.with("deck", deck).with("turn", players.asJsonArray().get(0).get("name")).with("status", "inGame");
+    sendUpdate();
+    announce("Game started!");
   }
 
   @Override

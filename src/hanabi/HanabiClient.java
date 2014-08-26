@@ -41,7 +41,6 @@ import com.google.common.base.Throwables;
 public class HanabiClient extends GPanel implements ConnectionListener {
 
   private static final Logger logger = Logger.getLogger(HanabiClient.class);
-
   private static final boolean ROTATE_SELF_TO_TOP = false;
 
   private ClientConnection conn;
@@ -53,6 +52,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   private DiscardPanel discardPanel = new DiscardPanel();
   private boolean loggedIn = false;
   private GButton newGameButton;
+  private GButton toggleGame;
 
   private HanabiClient() {
     setLayout(new MigLayout("insets 20, gap 0"));
@@ -120,7 +120,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   };
 
   private boolean inGame() {
-    return !state.getJson("players").isEmpty();
+    return state.get("status").equals("inGame");
   }
 
   private void refreshUI() {
@@ -185,13 +185,48 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   }
 
   private void lobbyUI() {
-    leftSide.add(new GLabel("Waiting to play:").bold(), "wrap 10");
+    leftSide.add(new GLabel("Watching:").bold(), "wrap 10");
     List<String> watchers = state.getJson("watchers").asStringArray();
+    if (watchers.isEmpty()) {
+      leftSide.add(new GLabel("None").bold(), "wrap 5");
+    }
     for (String watcher : watchers) {
       leftSide.add(new JLabel(watcher), "wrap 5");
     }
-    // if (watchers.size() >= 2) {
+
+    leftSide.add(new GLabel("Playing:").bold(), "newline 10, wrap 10");
+    Json players = state.getJson("players");
+    if (players.isEmpty()) {
+      leftSide.add(new GLabel("None").bold(), "wrap 5");
+    }
+    for (Json player : players.asJsonArray()) {
+      leftSide.add(new JLabel(player.get("name")), "wrap 5");
+    }
+
+    if (watchers.contains(username)) {
+      toggleGame = new GButton("Join Game");
+    } else {
+      toggleGame = new GButton("Leave Game");
+    }
+
+    toggleGame.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent arg0) {
+        System.out.println(toggleGame.getText());
+        if (toggleGame.getText().equals("Join Game")) {
+          send(Json.object().with("command", "join"));
+          toggleGame.setText("Leave Game");
+        } else {
+          send(Json.object().with("command", "leave"));
+          toggleGame.setText("Join Game");
+        }
+      }
+    });
+
+    leftSide.add(toggleGame, "newline 10");
     leftSide.add(new GButton(startGameAction), "newline 10");
+    leftSide.add(new GLabel("Reminder: if an idle player is in the player list, " +
+        "start the game and then immediately new game."), "newline 10");
     // }
   }
 
@@ -249,9 +284,6 @@ public class HanabiClient extends GPanel implements ConnectionListener {
         send(Json.object().with("command", "login").with("user", username));
       }
     });
-
-
-
   }
 
   private void send(Json json) {
