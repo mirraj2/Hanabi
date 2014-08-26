@@ -69,10 +69,9 @@ public class HanabiServer implements ConnectionListener {
       announce(name + " joined the game.");
     } else if (command.equals("leave")) {
       watchers.add(name);
-      for (int i = 0; i < players.size(); i++) {
+      for (int i = players.size() - 1; i >= 0; i--) {
         if (players.asJsonArray().get(i).get("name").equals(name)) {
           players.remove(i);
-          break;
         }
       }
       announce(name + " left the game.");
@@ -100,6 +99,12 @@ public class HanabiServer implements ConnectionListener {
   private void colorHint(String target, int index, String from) {
     checkState(state.get("turn").equals(from));
 
+    int cluesLeft = state.getInt("cluesLeft");
+    if (cluesLeft == 0) {
+      announce("You are out of clues!!");
+      return;
+    }
+
     Json player = getPlayer(target);
     List<Json> hand = player.getJson("hand").asJsonArray();
     CardColor color = CardColor.valueOf(hand.get(index).get("color"));
@@ -113,7 +118,7 @@ public class HanabiServer implements ConnectionListener {
       }
     }
 
-    state.with("cluesLeft", state.getInt("cluesLeft") - 1);
+    state.with("cluesLeft", cluesLeft - 1);
 
     announce(from + " told " + target + " about: " + count + " " + color + " card(s)");
 
@@ -122,6 +127,12 @@ public class HanabiServer implements ConnectionListener {
 
   private void rankHint(String target, int index, String from) {
     checkState(state.get("turn").equals(from));
+
+    int cluesLeft = state.getInt("cluesLeft");
+    if (cluesLeft == 0) {
+      announce("You are out of clues!!");
+      return;
+    }
 
     Json player = getPlayer(target);
     List<Json> hand = player.getJson("hand").asJsonArray();
@@ -136,7 +147,7 @@ public class HanabiServer implements ConnectionListener {
       }
     }
 
-    state.with("cluesLeft", state.getInt("cluesLeft") - 1);
+    state.with("cluesLeft", cluesLeft - 1);
 
     announce(from + " told " + target + " about: " + count + " rank-" + rank + " card(s)");
 
