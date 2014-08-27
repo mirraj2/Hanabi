@@ -75,6 +75,7 @@ public class HanabiServer implements ConnectionListener {
       watchers.add(name);
       for (int i = players.size(); i >= 0; i--) {
         if (players.asJsonArray().get(i).get("name").equals(name)) {
+          players.remove(i);
         }
       }
       announce(name + " left the game.");
