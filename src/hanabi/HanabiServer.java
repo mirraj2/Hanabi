@@ -28,7 +28,9 @@ public class HanabiServer implements ConnectionListener {
   private Json watchers, players, board, discard, state, deck, replay;
 
   public HanabiServer() {
+    replay = null;
     reset();
+    state.with("replay", false);
   }
 
   @Override
@@ -79,10 +81,18 @@ public class HanabiServer implements ConnectionListener {
         }
       }
       announce(name + " left the game.");
-    } else {
+    } else if (command.equals("replay")) {
+      watchReplay();
+    }
+    else {
       logger.error("Don't know command: " + json);
     }
     sendUpdate();
+  }
+
+  private void watchReplay() {
+    checkState(replay != null);
+
   }
 
   private void reset() {
@@ -94,7 +104,6 @@ public class HanabiServer implements ConnectionListener {
         Json.object().with("board", board).with("players", players).with("watchers", watchers)
             .with("discard", discard).with("gameOver", false).with("status", "lobby");
     deck = Json.array();
-    replay = Json.object().with("turns", Json.array());
 
     for (String player : connMap.values()) {
       watchers.add(player);
@@ -331,7 +340,9 @@ public class HanabiServer implements ConnectionListener {
 
     deck = Json.array(cards);
     state.with("deck", deck).with("turn", players.asJsonArray().get(0).get("name")).with("status", "inGame");
+    replay = Json.object().with("turns", Json.array());
     replay.with("state", copyBoard());
+    state.with("replay", true);
     sendUpdate();
     announce("Game started!");
   }
