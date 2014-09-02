@@ -1,19 +1,23 @@
 package hanabi;
 
+import static com.google.common.base.Preconditions.checkState;
 import jasonlib.Json;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import jexxus.common.Connection;
 import jexxus.common.ConnectionListener;
 import jexxus.server.Server;
 import jexxus.server.ServerConnection;
+
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import static com.google.common.base.Preconditions.checkState;
 
 public class HanabiServer implements ConnectionListener {
 
@@ -101,9 +105,10 @@ public class HanabiServer implements ConnectionListener {
 
     int cluesLeft = state.getInt("cluesLeft");
     if (cluesLeft == 0) {
-      announce("You are out of clues!!");
+      announce("Illegal play - no clues left!");
       return;
     }
+    cluesLeft--;
 
     Json player = getPlayer(target);
     List<Json> hand = player.getJson("hand").asJsonArray();
@@ -118,9 +123,12 @@ public class HanabiServer implements ConnectionListener {
       }
     }
 
-    state.with("cluesLeft", cluesLeft - 1);
+    state.with("cluesLeft", cluesLeft);
 
     announce(from + " told " + target + " about: " + count + " " + color + " card(s)");
+    if (cluesLeft == 0) {
+      announce("That was your last clue!");
+    }
 
     nextTurn();
   }
@@ -130,9 +138,10 @@ public class HanabiServer implements ConnectionListener {
 
     int cluesLeft = state.getInt("cluesLeft");
     if (cluesLeft == 0) {
-      announce("You are out of clues!!");
+      announce("Illegal play - no clues left!");
       return;
     }
+    cluesLeft--;
 
     Json player = getPlayer(target);
     List<Json> hand = player.getJson("hand").asJsonArray();
@@ -147,9 +156,12 @@ public class HanabiServer implements ConnectionListener {
       }
     }
 
-    state.with("cluesLeft", cluesLeft - 1);
+    state.with("cluesLeft", cluesLeft);
 
     announce(from + " told " + target + " about: " + count + " rank-" + rank + " card(s)");
+    if (cluesLeft == 0) {
+      announce("That was your last clue!");
+    }
 
     nextTurn();
   }
@@ -248,7 +260,8 @@ public class HanabiServer implements ConnectionListener {
     if (!deck.isEmpty()) {
       hand.add(deck.asJsonArray().get(0));
       deck.remove(0);
-    } else if (!state.getBoolean("lastRound")) {
+    }
+    if (deck.isEmpty() && !state.getBoolean("lastRound")) {
       state.with("lastRound", true);
       state.with("endOn", player);
       announce("The deck is now empty. Each player gets one more turn.");
