@@ -7,20 +7,36 @@ import jasonlib.swing.component.GLabel;
 import jasonlib.swing.component.GPanel;
 import jasonlib.swing.component.GTextField;
 import jasonlib.swing.global.Components;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collections;
 import java.util.List;
-import javax.swing.*;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
 import jexxus.client.ClientConnection;
 import jexxus.common.Connection;
 import jexxus.common.ConnectionListener;
 import jexxus.server.ServerConnection;
 import net.miginfocom.swing.MigLayout;
+
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+
 import com.google.common.base.Throwables;
 
 public class HanabiClient extends GPanel implements ConnectionListener {
@@ -160,6 +176,9 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     leftSide.add(new PlayerPanel(this, "Board", state.getJson("board").asJsonArray(), false, false),
         "width 100%, height min(" + height + "%,100), wrap 15");
     boolean myTurn = username.equals(state.get("turn"));
+    if(state.getBoolean("showReplay")) {
+      myTurn = false;
+    }
 
     for (Json player : players) {
       String name = player.get("name");
@@ -169,6 +188,17 @@ public class HanabiClient extends GPanel implements ConnectionListener {
       leftSide.add(new GLabel(state.get("turn").equals(name) ? name + " (My Turn)" : name).bold(), "wrap 0");
       leftSide.add(new PlayerPanel(this, name, player.getJson("hand").asJsonArray(), hidden, myTurn),
           "width 100%, height min(" + height + "%,100), wrap 15");
+    }
+
+    if (state.getBoolean("showReplay")) {
+      GButton next = new GButton("Next Turn");
+      next.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+          send(Json.object().with("command", "replay-next"));
+        }
+      });
+      leftSide.add(next);
     }
 
     discardPanel.update(state.getJson("discard"));
@@ -202,7 +232,6 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     toggleGame.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent arg0) {
-        System.out.println(toggleGame.getText());
         if (toggleGame.getText().equals("Join Game")) {
           send(Json.object().with("command", "join"));
           toggleGame.setText("Leave Game");
@@ -215,6 +244,11 @@ public class HanabiClient extends GPanel implements ConnectionListener {
 
     leftSide.add(toggleGame, "newline 10");
     leftSide.add(new GButton(startGameAction), "newline 10");
+    GButton replay = new GButton(watchReplayAction);
+    leftSide.add(replay, "newline 10");
+    if (!state.getBoolean("replay")) {
+      replay.setEnabled(false);
+    }
     leftSide.add(new GLabel("Reminder: if an idle player is in the player list, " +
         "start the game and then immediately new game."), "newline 10");
     // }
@@ -224,6 +258,13 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
       send(Json.object().with("command", "start_game"));
+    }
+  };
+
+  private Action watchReplayAction = new AbstractAction("Watch Replay") {
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      send(Json.object().with("command", "replay"));
     }
   };
 
