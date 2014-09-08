@@ -4,6 +4,7 @@ import jasonlib.IO;
 import jasonlib.Json;
 import jasonlib.Rect;
 import jasonlib.swing.Graphics3D;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -12,11 +13,14 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.List;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+
 import com.google.common.collect.Lists;
 
 public class PlayerPanel extends JComponent {
@@ -55,7 +59,13 @@ public class PlayerPanel extends JComponent {
 
     for (Json card : Lists.reverse(hand)) {
       int rank = card.getInt("rank");
-      CardColor c = CardColor.valueOf(card.get("color"));
+      CardColor c;
+      if (card.has("showColor")) {
+        c = CardColor.valueOf(card.get("showColor"));
+      }
+      else {
+        c = CardColor.valueOf(card.get("color"));
+      }
 
       Rect r = new Rect(x, y, w, h);
 
@@ -65,7 +75,10 @@ public class PlayerPanel extends JComponent {
       }
 
       g.color(Color.black).fill(r);
-      if (showInfo || card.has("showColor")) {
+      if (showInfo) {
+        g.color(CardColor.valueOf(card.get("color")).getColor()).fill(r.grow(-3, -3));
+      }
+      else if (card.has("showColor")) {
         g.color(c.getColor()).fill(r.grow(-3, -3));
       }
       if (rank > 0) {
@@ -98,7 +111,7 @@ public class PlayerPanel extends JComponent {
   private Action colorHintAction = new AbstractAction() {
     @Override
     public void actionPerformed(ActionEvent e) {
-      client.colorHint(player, clickIndex);
+      client.colorHint(player, CardColor.valueOf(hand.get(clickIndex).get("color")));
     }
   };
 
@@ -145,6 +158,19 @@ public class PlayerPanel extends JComponent {
 
     return hand.size() - index - 1; // we rendered the cards in reverse
   }
+  
+  private class ColorHintEvent extends AbstractAction {
+    private CardColor c;
+
+    public ColorHintEvent(CardColor c) {
+      this.c = c;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      client.colorHint(player, c);
+    }
+  }
 
   private MouseAdapter myHandListener = new MouseAdapter() {
     @Override
@@ -170,13 +196,27 @@ public class PlayerPanel extends JComponent {
       }
 
       Json card = hand.get(clickIndex);
-
-      JMenuItem colorHint = new JMenuItem(colorHintAction);
       JMenuItem rankHint = new JMenuItem(rankHintAction);
-      colorHint.setText("Give " + card.get("color") + " Hint");
       rankHint.setText("Give " + card.getInt("rank") + "'s Hint");
       JPopupMenu popup = new JPopupMenu();
-      popup.add(colorHint);
+
+
+      if (CardColor.valueOf(card.get("color")).equals(CardColor.STAR)) {
+        JMenu colors = new JMenu("Give a Color Hint");
+        for (CardColor c : CardColor.values()) {
+          if (c.equals(CardColor.STAR)) {
+            continue;
+          }
+          JMenuItem colorHint = new JMenuItem(new ColorHintEvent(c));
+          colorHint.setText("Give " + c + " Hint");
+          colors.add(colorHint);
+        }
+        popup.add(colors);
+      } else {
+        JMenuItem colorHint = new JMenuItem(new ColorHintEvent(CardColor.valueOf(card.get("color"))));
+        colorHint.setText("Give " + card.get("color") + " Hint");
+        popup.add(colorHint);
+      }
       popup.add(rankHint);
       popup.show(PlayerPanel.this, e.getX(), e.getY());
     };

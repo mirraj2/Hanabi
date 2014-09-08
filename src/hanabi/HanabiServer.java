@@ -1,19 +1,23 @@
 package hanabi;
 
+import static com.google.common.base.Preconditions.checkState;
 import jasonlib.Json;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import jexxus.common.Connection;
 import jexxus.common.ConnectionListener;
 import jexxus.server.Server;
 import jexxus.server.ServerConnection;
+
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import static com.google.common.base.Preconditions.checkState;
 
 public class HanabiServer implements ConnectionListener {
 
@@ -48,13 +52,14 @@ public class HanabiServer implements ConnectionListener {
       }
       announce(user + " logged in.");
     } else if (command.equals("start_game")) {
+      state.with("starmode", json.getBoolean("starmode"));
       startGame();
     } else if (command.equals("play")) {
       play(json.getInt("index"), name);
     } else if (command.equals("discard")) {
       discard(json.getInt("index"), name);
     } else if (command.equals("colorHint")) {
-      colorHint(json.get("target"), json.getInt("index"), name);
+      colorHint(json.get("target"), CardColor.valueOf(json.get("color")), name);
     } else if (command.equals("rankHint")) {
       rankHint(json.get("target"), json.getInt("index"), name);
     } else if (command.equals("reset")) {
@@ -96,7 +101,7 @@ public class HanabiServer implements ConnectionListener {
     }
   }
 
-  private void colorHint(String target, int index, String from) {
+  private void colorHint(String target, CardColor color, String from) {
     checkState(state.get("turn").equals(from));
 
     int cluesLeft = state.getInt("cluesLeft");
@@ -107,14 +112,17 @@ public class HanabiServer implements ConnectionListener {
 
     Json player = getPlayer(target);
     List<Json> hand = player.getJson("hand").asJsonArray();
-    CardColor color = CardColor.valueOf(hand.get(index).get("color"));
 
     int count = 0;
     for (Json card : hand) {
       CardColor c = CardColor.valueOf(card.get("color"));
-      if (c == color) {
+      if (c == color || c == CardColor.STAR) {
         count++;
-        card.with("showColor", true);
+        if (card.has("showColor") && CardColor.valueOf(card.get("showColor")) != color) {
+          card.with("showColor", CardColor.STAR);
+        } else {
+          card.with("showColor", color);
+        }
       }
     }
 
@@ -307,6 +315,9 @@ public class HanabiServer implements ConnectionListener {
 
     List<Json> cards = Lists.newArrayList();
     for (CardColor c : CardColor.values()) {
+      if (c.equals(CardColor.STAR) && !state.getBoolean("starmode")) {
+        continue;
+      }
       board.add(Json.object().with("color", c).with("rank", 0));
       for (int rank : new int[] {1, 1, 1, 2, 2, 3, 3, 4, 4, 5}) {
         cards.add(Json.object().with("color", c).with("rank", rank));

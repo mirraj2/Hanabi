@@ -27,6 +27,12 @@ public enum CardColor {
       return new Color(0, 150, 0);
     }
   },
+  STAR {
+    @Override
+    public Color getColor() {
+      return Color.PINK;
+    }
+  },
   BLUE {
     @Override
     public Color getColor() {

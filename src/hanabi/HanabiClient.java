@@ -7,20 +7,37 @@ import jasonlib.swing.component.GLabel;
 import jasonlib.swing.component.GPanel;
 import jasonlib.swing.component.GTextField;
 import jasonlib.swing.global.Components;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collections;
 import java.util.List;
-import javax.swing.*;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
 import jexxus.client.ClientConnection;
 import jexxus.common.Connection;
 import jexxus.common.ConnectionListener;
 import jexxus.server.ServerConnection;
 import net.miginfocom.swing.MigLayout;
+
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+
 import com.google.common.base.Throwables;
 
 public class HanabiClient extends GPanel implements ConnectionListener {
@@ -43,6 +60,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   private GButton toggleGame;
   private JComboBox<String> servers;
   private GTextField usernameField;
+  private JCheckBox starmode = new JCheckBox("Star Mode?");
 
   private HanabiClient() {
     setLayout(new MigLayout("insets 20, gap 0"));
@@ -59,8 +77,8 @@ public class HanabiClient extends GPanel implements ConnectionListener {
     send(Json.object().with("command", "discard").with("index", index));
   }
 
-  public void colorHint(String target, int index) {
-    send(Json.object().with("command", "colorHint").with("target", target).with("index", index));
+  public void colorHint(String target, CardColor c) {
+    send(Json.object().with("command", "colorHint").with("target", target).with("color", c));
   }
 
   public void rankHint(String target, int index) {
@@ -213,6 +231,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
       }
     });
 
+    leftSide.add(starmode);
     leftSide.add(toggleGame, "newline 10");
     leftSide.add(new GButton(startGameAction), "newline 10");
     leftSide.add(new GLabel("Reminder: if an idle player is in the player list, " +
@@ -223,7 +242,8 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   private Action startGameAction = new AbstractAction("Start Game") {
     @Override
     public void actionPerformed(ActionEvent e) {
-      send(Json.object().with("command", "start_game"));
+      discardPanel.setStarmode(starmode.isEnabled());
+      send(Json.object().with("command", "start_game").with("starmode", starmode.isEnabled()));
     }
   };
 
