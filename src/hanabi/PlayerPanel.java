@@ -201,10 +201,10 @@ public class PlayerPanel extends JComponent {
       JPopupMenu popup = new JPopupMenu();
 
 
-      if (CardColor.valueOf(card.get("color")).equals(CardColor.STAR)) {
+      if (CardColor.valueOf(card.get("color")).equals(CardColor.RAINBOW)) {
         JMenu colors = new JMenu("Give a Color Hint");
         for (CardColor c : CardColor.values()) {
-          if (c.equals(CardColor.STAR)) {
+          if (c.equals(CardColor.RAINBOW)) {
             continue;
           }
           JMenuItem colorHint = new JMenuItem(new ColorHintEvent(c));

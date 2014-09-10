@@ -116,10 +116,10 @@ public class HanabiServer implements ConnectionListener {
     int count = 0;
     for (Json card : hand) {
       CardColor c = CardColor.valueOf(card.get("color"));
-      if (c == color || c == CardColor.STAR) {
+      if (c == color || c == CardColor.RAINBOW) {
         count++;
         if (card.has("showColor") && CardColor.valueOf(card.get("showColor")) != color) {
-          card.with("showColor", CardColor.STAR);
+          card.with("showColor", CardColor.RAINBOW);
         } else {
           card.with("showColor", color);
         }
@@ -315,7 +315,7 @@ public class HanabiServer implements ConnectionListener {
 
     List<Json> cards = Lists.newArrayList();
     for (CardColor c : CardColor.values()) {
-      if (c.equals(CardColor.STAR) && !state.getBoolean("starmode")) {
+      if (c.equals(CardColor.RAINBOW) && !state.getBoolean("starmode")) {
         continue;
       }
       board.add(Json.object().with("color", c).with("rank", 0));

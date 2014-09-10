@@ -42,7 +42,7 @@ public class DiscardPanel extends GPanel {
 
     int w = 60;
     for (CardColor c : CardColor.values()) {
-      if (!starmode && c.equals(CardColor.STAR)) {
+      if (!starmode && c.equals(CardColor.RAINBOW)) {
         continue;
       }
       Collection<Integer> values = m.get(c);
@@ -52,7 +52,7 @@ public class DiscardPanel extends GPanel {
     }
 
     for (CardColor c : CardColor.values()) {
-      if (!starmode && c.equals(CardColor.STAR)) {
+      if (!starmode && c.equals(CardColor.RAINBOW)) {
         continue;
       }
       List<Integer> values = Ordering.natural().immutableSortedCopy(m.get(c));
