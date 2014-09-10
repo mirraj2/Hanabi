@@ -4,26 +4,28 @@ import jasonlib.IO;
 import jasonlib.Json;
 import jasonlib.Rect;
 import jasonlib.swing.Graphics3D;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.LinearGradientPaint;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.List;
-
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-
 import com.google.common.collect.Lists;
 
 public class PlayerPanel extends JComponent {
+
+  private static final Color[] RAINBOW_COLORS = new Color[] {Color.red, Color.orange, Color.yellow,
+      Color.green, Color.blue, new Color(255, 0, 255)};
+  private static final float[] RAINBOW_OFFSETS = new float[] {.05f, .25f, .35f, .50f, .7f, .9f};
 
   private static final int gap = 10;
   private static final int leftGap = 32;
@@ -59,28 +61,33 @@ public class PlayerPanel extends JComponent {
 
     for (Json card : Lists.reverse(hand)) {
       int rank = card.getInt("rank");
-      CardColor c;
-      if (card.has("showColor")) {
-        c = CardColor.valueOf(card.get("showColor"));
+
+      boolean showInfo = !this.myHand;
+      if (onEye && !player.equalsIgnoreCase("board")) {
+        showInfo = false;
       }
-      else {
+
+      CardColor c = null;
+      if (showInfo) {
         c = CardColor.valueOf(card.get("color"));
+      } else if (card.has("showColor")) {
+        c = CardColor.valueOf(card.get("showColor"));
       }
 
       Rect r = new Rect(x, y, w, h);
 
-      boolean showInfo = !this.myHand;
-      if (onEye) {
-        showInfo = false;
+      g.color(Color.black).fill(r);
+
+      if (c != null) {
+        if (c == CardColor.RAINBOW) {
+          g.setPaint(new LinearGradientPaint(r.x(), r.y(), (float) r.maxX(), (float) r.maxY(),
+              RAINBOW_OFFSETS, RAINBOW_COLORS));
+        } else {
+          g.color(c.getColor());
+        }
+        g.fill(r.grow(-3, -3));
       }
 
-      g.color(Color.black).fill(r);
-      if (showInfo) {
-        g.color(CardColor.valueOf(card.get("color")).getColor()).fill(r.grow(-3, -3));
-      }
-      else if (card.has("showColor")) {
-        g.color(c.getColor()).fill(r.grow(-3, -3));
-      }
       if (rank > 0) {
         g.font(font).color(Color.white).text(showInfo || card.has("showRank") ? rank + "" : "?", r);
       }

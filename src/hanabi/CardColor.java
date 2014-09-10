@@ -3,6 +3,12 @@ package hanabi;
 import java.awt.Color;
 
 public enum CardColor {
+  RAINBOW {
+    @Override
+    public Color getColor() {
+      return Color.PINK;
+    }
+  },
   GRAY {
     @Override
     public Color getColor() {
@@ -25,12 +31,6 @@ public enum CardColor {
     @Override
     public Color getColor() {
       return new Color(0, 150, 0);
-    }
-  },
-  RAINBOW {
-    @Override
-    public Color getColor() {
-      return Color.PINK;
     }
   },
   BLUE {
