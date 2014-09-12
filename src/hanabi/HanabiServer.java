@@ -52,7 +52,6 @@ public class HanabiServer implements ConnectionListener {
       }
       announce(user + " logged in.");
     } else if (command.equals("start_game")) {
-      state.with("starmode", json.getBoolean("starmode"));
       startGame();
     } else if (command.equals("play")) {
       play(json.getInt("index"), name);
@@ -80,7 +79,10 @@ public class HanabiServer implements ConnectionListener {
         }
       }
       announce(name + " left the game.");
-    } else {
+    } else if (command.equals("toggle_rainbow")) {
+      state.with("rainbow", json.getBoolean("rainbow"));
+    }
+    else {
       logger.error("Don't know command: " + json);
     }
     sendUpdate();
@@ -93,7 +95,7 @@ public class HanabiServer implements ConnectionListener {
     discard = Json.array();
     state =
         Json.object().with("board", board).with("players", players).with("watchers", watchers)
-            .with("discard", discard).with("gameOver", false).with("status", "lobby");
+            .with("discard", discard).with("gameOver", false).with("status", "lobby").with("rainbow", false);
     deck = Json.array();
 
     for (String player : connMap.values()) {
@@ -315,7 +317,7 @@ public class HanabiServer implements ConnectionListener {
 
     List<Json> cards = Lists.newArrayList();
     for (CardColor c : CardColor.values()) {
-      if (c.equals(CardColor.RAINBOW) && !state.getBoolean("starmode")) {
+      if (c.equals(CardColor.RAINBOW) && !state.getBoolean("rainbow")) {
         continue;
       }
       board.add(Json.object().with("color", c).with("rank", 0));

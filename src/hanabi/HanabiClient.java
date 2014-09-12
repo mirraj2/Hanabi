@@ -60,7 +60,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
   private GButton toggleGame;
   private JComboBox<String> servers;
   private GTextField usernameField;
-  private JCheckBox starmode = new JCheckBox("Star Mode?");
+  private JCheckBox rainbowMode;
 
   private HanabiClient() {
     setLayout(new MigLayout("insets 20, gap 0"));
@@ -189,7 +189,7 @@ public class HanabiClient extends GPanel implements ConnectionListener {
           "width 100%, height min(" + height + "%,100), wrap 15");
     }
 
-    discardPanel.update(state.getJson("discard"));
+    discardPanel.update(state.getJson("discard"), state.getBoolean("rainbow"));
   }
 
   private void lobbyUI() {
@@ -231,19 +231,29 @@ public class HanabiClient extends GPanel implements ConnectionListener {
       }
     });
 
-    leftSide.add(starmode);
+    rainbowMode = new JCheckBox("Rainbow Mode");
+    rainbowMode.addActionListener(toggleRainbowAction);
+    rainbowMode.setSelected(state.getBoolean("rainbow"));
+    leftSide.add(rainbowMode);
     leftSide.add(toggleGame, "newline 10");
     leftSide.add(new GButton(startGameAction), "newline 10");
     leftSide.add(new GLabel("Reminder: if an idle player is in the player list, " +
         "start the game and then immediately new game."), "newline 10");
-    // }
   }
+  
+  private Action toggleRainbowAction = new AbstractAction("Rainbow Mode") {
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      send(Json.object().with("command", "toggle_rainbow").with("rainbow", rainbowMode.isSelected()));
+    }
+    
+  };
 
   private Action startGameAction = new AbstractAction("Start Game") {
     @Override
     public void actionPerformed(ActionEvent e) {
-      discardPanel.setStarmode(starmode.isEnabled());
-      send(Json.object().with("command", "start_game").with("starmode", starmode.isEnabled()));
+      send(Json.object().with("command", "start_game"));
     }
   };
 

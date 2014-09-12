@@ -8,6 +8,7 @@ import jasonlib.swing.component.GPanel;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.LinearGradientPaint;
 import java.util.Collection;
 import java.util.List;
 
@@ -17,12 +18,11 @@ import com.google.common.collect.Ordering;
 
 public class DiscardPanel extends GPanel {
 
+  private static final Color[] RAINBOW_COLORS = new Color[] {Color.red, Color.orange, Color.yellow,
+      Color.green, Color.blue, new Color(255, 0, 255)};
+  private static final float[] RAINBOW_OFFSETS = new float[] {.05f, .25f, .35f, .50f, .7f, .9f};
   private final Multimap<CardColor, Integer> m = ArrayListMultimap.create();
-  private boolean starmode = false;
-
-  public void setStarmode(boolean starmode) {
-    this.starmode = starmode;
-  }
+  private boolean rainbowMode = false;
 
   @Override
   protected void paintComponent(Graphics gg) {
@@ -33,7 +33,7 @@ public class DiscardPanel extends GPanel {
     Font font = new Font("Arial", Font.BOLD, 14);
     g.font(font);
 
-    int nColors = starmode ? 6 : 5;
+    int nColors = rainbowMode ? 6 : 5;
 
     int gap = 5;
     int h = (getHeight() - gap * 4) / nColors;
@@ -42,7 +42,7 @@ public class DiscardPanel extends GPanel {
 
     int w = 60;
     for (CardColor c : CardColor.values()) {
-      if (!starmode && c.equals(CardColor.RAINBOW)) {
+      if (!rainbowMode && c.equals(CardColor.RAINBOW)) {
         continue;
       }
       Collection<Integer> values = m.get(c);
@@ -52,13 +52,19 @@ public class DiscardPanel extends GPanel {
     }
 
     for (CardColor c : CardColor.values()) {
-      if (!starmode && c.equals(CardColor.RAINBOW)) {
+      if (!rainbowMode && c.equals(CardColor.RAINBOW)) {
         continue;
       }
       List<Integer> values = Ordering.natural().immutableSortedCopy(m.get(c));
       for (Integer value : values) {
         Rect r = new Rect(x, y, w, h);
-        g.color(c.getColor()).fill(r).color(Color.white).text(value + "", r);
+        if (c == CardColor.RAINBOW) {
+          g.setPaint(new LinearGradientPaint(r.x(), r.y(), (float) r.maxX(), (float) r.maxY(),
+              RAINBOW_OFFSETS, RAINBOW_COLORS));
+        } else {
+          g.color(c.getColor());
+        }
+        g.fill(r).color(Color.white).text(value + "", r);
         g.color(Color.black).draw(r);
         x += w + gap;
       }
@@ -67,8 +73,9 @@ public class DiscardPanel extends GPanel {
     }
   }
 
-  public void update(Json discard) {
+  public void update(Json discard, boolean rainbow) {
     m.clear();
+    rainbowMode = rainbow;
 
     for (Json card : discard.asJsonArray()) {
       int rank = card.getInt("rank");
